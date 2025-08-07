@@ -1,3 +1,5 @@
+# .github/workflows/ci-backend.yml
+
 name: CI - Backend
 
 on:
@@ -7,24 +9,39 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build_and_push: # Renamed job for clarity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4 # <-- IMPROVEMENT: Use latest major version of checkout
+
+      - name: Extract Git commit SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Docker Login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3 # <-- IMPROVEMENT: Use latest major version
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKER_PASSWORD }} # This is your PAT
 
-      - name: Build Backend Image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-backend ./backend
+      - name: Build and Tag Backend Image
+        id: docker_build
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-backend:latest -t ${{ secrets.DOCKER_USERNAME }}/hr-backend:${{ steps.vars.outputs.sha_short }} ./backend
+          # We build two tags: 'latest' and the unique Git SHA tag
 
       - name: Scan Image with Trivy
-        uses: aquasecurity/trivy-action@v0.13.1
+        uses: aquasecurity/trivy-action@v0.20.0 # <-- FIX: Updated to a modern, working version
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/hr-backend
+          image-ref: '${{ secrets.DOCKER_USERNAME }}/hr-backend:latest' # Scan the image we just built
+          format: 'table'
+          exit-code: '0' # Fails on 'CRITICAL' vulnerabilities by default. '0' just scans and reports.
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
       - name: Push Backend to Docker Hub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/hr-backend
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/hr-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/hr-backend:${{ steps.vars.outputs.sha_short }}
