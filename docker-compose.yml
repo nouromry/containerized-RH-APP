@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+
+  backend:
+    build: ./backend
+    container_name: hr-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - ai-model
+    networks:
+      - hrnet
+
+  ai-model:
+    build: ./ai-model
+    container_name: hr-aimodel
+    ports:
+      - "5001:5001"
+    networks:
+      - hrnet
+
+  frontend:
+    build: ./frontend
+    container_name: hr-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - hrnet
+
+networks:
+  hrnet:
+    driver: bridge
