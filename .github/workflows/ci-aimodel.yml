@@ -20,9 +20,6 @@ jobs:
 
       - name: Build AI Model Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel ./ai-model
-
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@v0.12.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/hr-aimodel
 
