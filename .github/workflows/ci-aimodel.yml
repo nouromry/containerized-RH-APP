@@ -1,5 +1,4 @@
 # .github/workflows/ci-aimodel.yml
-
 name: CI - AI Model
 
 on:
@@ -9,37 +8,26 @@ on:
     branches: [ main ]
 
 jobs:
-  build_and_push:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Extract Git commit SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v3
 
       - name: Docker Login
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Tag AI Model Image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:${{ steps.vars.outputs.sha_short }} ./ai-model
+      - name: Build AI Model Image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel ./ai-model
 
-      - name: Scan Image with Trivy
-        uses: aquasecurity/trivy-action@v0.20.0
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@v0.20.0 # <-- THE ONLY FIX NEEDED
         with:
-          image-ref: '${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest'
+          image-ref: '${{ secrets.DOCKER_USERNAME }}/hr-aimodel'
           format: 'table'
           exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
 
       - name: Push AI Model to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:${{ steps.vars.outputs.sha_short }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel
