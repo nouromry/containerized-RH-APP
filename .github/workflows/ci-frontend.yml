@@ -1,11 +1,11 @@
-# .github/workflows/ci-frontend.yml
 name: CI - Frontend
 
 on:
   push:
+    branches: [ main ]
     paths:
       - 'frontend/**'
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,12 +22,10 @@ jobs:
       - name: Build Frontend Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-frontend ./frontend
 
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@v0.20.0 # <-- THE ONLY FIX NEEDED
+      - name: Scan Image with Trivy
+        uses: aquasecurity/trivy-action@v0.13.1
         with:
-          image-ref: '${{ secrets.DOCKER_USERNAME }}/hr-frontend'
-          format: 'table'
-          exit-code: '0' # This prevents the workflow from failing if vulnerabilities are found
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/hr-frontend
 
       - name: Push Frontend to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/hr-frontend
