@@ -22,7 +22,7 @@ jobs:
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-backend ./backend
 
       - name: Scan Image with Trivy
-        uses: aquasecurity/trivy-action@v0.13.1
+        uses: aquasecurity/trivy-action@latest
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/hr-backend
 
