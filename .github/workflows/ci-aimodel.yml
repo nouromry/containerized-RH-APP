@@ -20,8 +20,6 @@ jobs:
 
       - name: Build AI Model Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel ./ai-model
-        with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/hr-aimodel
 
       - name: Push AI Model to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel
