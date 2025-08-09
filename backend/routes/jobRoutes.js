@@ -75,5 +75,8 @@ router.route('/:id/apply')
   
 router.route('/:id/candidates')
   .get(protect, recruiter, getJobCandidates);
-
+// @desc    Health check endpoint
+// @route   GET /api/health
+// @access  Public
+router.get('/health', (req, res) => res.status(200).send('OK'));
 export default router;

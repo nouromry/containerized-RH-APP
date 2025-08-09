@@ -5,8 +5,6 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 
-// We have REMOVED the cloudinary.config({...}) block from here to fix the loading error.
-
 // @desc    Create a new job
 // @route   POST /api/jobs
 // @access  Private/Recruiter
@@ -131,7 +129,6 @@ const applyToJob = async (req, res) => {
   }
 
   try {
-    // --- THIS IS THE FIX ---
     // Configure Cloudinary right before using it to ensure .env variables are loaded.
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -152,9 +149,12 @@ const applyToJob = async (req, res) => {
     form.append('job_description', job.description);
     form.append('required_skills', JSON.stringify(job.requiredSkills));
     
-    const aiServiceResponse = await axios.post('http://localhost:5001/api/score', form, {
-      headers: { ...form.getHeaders() },
-    });
+    const AI_BASE_URL = process.env.AI_API_URL || 'http://aimodel-service:5001';
+    
+    // --- THIS IS THE FIX ---
+    // The response from the AI service is now correctly captured in the 'aiServiceResponse' variable.
+    const aiServiceResponse = await axios.post(`${AI_BASE_URL}/api/score`, form, { headers: form.getHeaders() });
+
     const { score } = aiServiceResponse.data;
 
     // 3. Save application to database with the Cloudinary URL

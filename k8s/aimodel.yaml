@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aimodel-deployment
+  namespace: hr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hr-aimodel
+  template:
+    metadata:
+      labels:
+        app: hr-aimodel
+    spec:
+      containers:
+      - name: aimodel
+        image: nouromry/hr-aimodel:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aimodel-service
+  namespace: hr
+spec:
+  selector:
+    app: hr-aimodel
+  ports:
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+  type: ClusterIP
