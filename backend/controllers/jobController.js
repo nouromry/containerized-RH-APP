@@ -106,55 +106,50 @@ const getJobById = async (req, res) => {
 // @desc    Apply for a job
 // @route   POST /api/jobs/:id/apply
 // @access  Private/Candidate
+// Replace the entire applyToJob function one last time
 const applyToJob = async (req, res) => {
   const jobId = req.params.id;
   const applicantId = req.user._id;
 
+  // ... (all the initial checks for role, job, etc. stay the same) ...
+
   if (req.user.role !== 'candidate') {
     return res.status(403).json({ message: 'Only candidates can apply for jobs' });
   }
-
   const job = await Job.findById(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-
   const alreadyApplied = await Application.findOne({ job: jobId, applicant: applicantId });
   if (alreadyApplied) {
     return res.status(400).json({ message: 'You have already applied for this job' });
   }
-
   if (!req.file) {
     return res.status(400).json({ message: 'Resume file is required' });
   }
 
   try {
-    // Configure Cloudinary right before using it to ensure .env variables are loaded.
+    // --- THIS IS THE NEW LINE TO ADD ---
+    console.log(`--- APPLY TO JOB STARTED FOR JOB: ${jobId}, BY USER: ${applicantId} ---`);
+
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-
-    // 1. Upload resume to Cloudinary
+    // ... (rest of the try block is the same) ...
     const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
       folder: 'resumes',
       resource_type: 'raw',
     });
     const resumeUrl = cloudinaryResult.secure_url;
-
-    // 2. Call the AI Service for scoring
     const form = new FormData();
     form.append('resume', fs.createReadStream(req.file.path));
     form.append('job_description', job.description);
     form.append('required_skills', JSON.stringify(job.requiredSkills));
-    
     const AI_BASE_URL = process.env.AI_API_URL || 'http://aimodel-service:5001';
-    
     const aiServiceResponse = await axios.post(`${AI_BASE_URL}/api/score`, form, { headers: form.getHeaders() });
     const { score } = aiServiceResponse.data;
-
-    // 3. Save application to database with the Cloudinary URL
     const application = new Application({
       job: jobId,
       applicant: applicantId,
@@ -162,29 +157,22 @@ const applyToJob = async (req, res) => {
       score_match: score,
     });
     await application.save();
-
-    // 4. Clean up the temporary local file
     fs.unlinkSync(req.file.path);
-    
     res.status(201).json({ 
         message: 'Application submitted successfully',
         matchResult: aiServiceResponse.data 
     });
 
   } catch (error) {
-    // --- THIS IS THE CORRECTED, DETAILED LOGGING BLOCK ---
+    // The detailed catch block stays the same
     console.error("--- DETAILED ERROR IN APPLY TO JOB ---");
     if (error.isAxiosError) {
-      // Specifically for AI Service errors
       console.error("Axios Error Message:", error.message);
       console.error("AI Service Response Status:", error.response?.status);
       console.error("AI Service Response Data:", JSON.stringify(error.response?.data, null, 2));
     } else if (error.http_code) {
-      // Specifically for Cloudinary errors
       console.error("Cloudinary Error:", error.message);
-      console.error("Full Cloudinary Error Object:", JSON.stringify(error, null, 2));
     } else {
-      // For all other errors
       console.error("Generic Error Message:", error.message);
       console.error("Full Error Stack:", error.stack);
     }
