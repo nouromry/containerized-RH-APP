@@ -16,6 +16,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get('/api/health', (req, res) => res.status(200).send('OK'));
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);

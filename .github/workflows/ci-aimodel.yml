@@ -7,11 +7,14 @@ on:
     paths:
       - 'ai-model/**'
       - '.github/workflows/ci-aimodel.yml' # <-- The crucial fix
+      - '.github/workflows/ci-aimodel.yml' # <-- The crucial fix
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -21,6 +24,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
