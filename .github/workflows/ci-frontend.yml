@@ -7,8 +7,6 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/ci-frontend.yml' # <-- The crucial fix
-      - '.github/workflows/ci-frontend.yml' # <-- The crucial fix
-
 jobs:
   build:
     runs-on: ubuntu-latest
