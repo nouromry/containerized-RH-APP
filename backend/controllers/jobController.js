@@ -151,10 +151,7 @@ const applyToJob = async (req, res) => {
     
     const AI_BASE_URL = process.env.AI_API_URL || 'http://aimodel-service:5001';
     
-    // --- THIS IS THE FIX ---
-    // The response from the AI service is now correctly captured in the 'aiServiceResponse' variable.
     const aiServiceResponse = await axios.post(`${AI_BASE_URL}/api/score`, form, { headers: form.getHeaders() });
-
     const { score } = aiServiceResponse.data;
 
     // 3. Save application to database with the Cloudinary URL
@@ -175,7 +172,24 @@ const applyToJob = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error during application process:', error);
+    // --- THIS IS THE CORRECTED, DETAILED LOGGING BLOCK ---
+    console.error("--- DETAILED ERROR IN APPLY TO JOB ---");
+    if (error.isAxiosError) {
+      // Specifically for AI Service errors
+      console.error("Axios Error Message:", error.message);
+      console.error("AI Service Response Status:", error.response?.status);
+      console.error("AI Service Response Data:", JSON.stringify(error.response?.data, null, 2));
+    } else if (error.http_code) {
+      // Specifically for Cloudinary errors
+      console.error("Cloudinary Error:", error.message);
+      console.error("Full Cloudinary Error Object:", JSON.stringify(error, null, 2));
+    } else {
+      // For all other errors
+      console.error("Generic Error Message:", error.message);
+      console.error("Full Error Stack:", error.stack);
+    }
+    console.error("--- END OF DETAILED ERROR ---");
+
     if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
     }
