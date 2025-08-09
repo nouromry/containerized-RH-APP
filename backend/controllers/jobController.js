@@ -98,9 +98,11 @@ const applyToJob = async (req, res) => {
   form.append('job_description', job.description);
   form.append('required_skills', JSON.stringify(job.requiredSkills));
   
-  const AI_BASE_URL = process.env.AI_API_URL || 'http://aimodel-service:5001';
-  
-  const aiServiceResponse = await axios.post(`${AI_BASE_URL}/api/score`, form, { headers: form.getHeaders() });
+const aiBase = process.env.AI_API_URL || 'http://aimodel-service:5001';
+const aiServiceResponse = await axios.post(`${aiBase}/api/score`, form, {
+  headers: { ...form.getHeaders() },
+});
+
   const { score } = aiServiceResponse.data;
 
   const application = new Application({
