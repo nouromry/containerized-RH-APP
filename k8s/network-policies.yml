@@ -1,0 +1,68 @@
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: hr
+spec:
+  podSelector: {} # Selects all pods
+  policyTypes:
+  - Ingress
+  - Egress
+  # An empty ingress/egress block means no traffic is allowed
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: hr
+spec:
+  podSelector:
+    matchLabels:
+      app: hr-backend # This policy applies to the backend pod
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: hr-frontend # Allow traffic FROM the frontend pod
+    ports:
+    - protocol: TCP
+      port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-db-and-ai
+  namespace: hr
+spec:
+  podSelector:
+    matchLabels:
+      app: hr-backend # This policy applies to the backend pod
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mongo # Allow traffic TO the database
+    ports:
+    - protocol: TCP
+      port: 27017
+  - to:
+    - podSelector:
+        matchLabels:
+          app: hr-aimodel # Allow traffic TO the AI model
+    ports:
+    - protocol: TCP
+      port: 5001
+  # We also need to allow DNS requests
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - port: 53
+      protocol: UDP

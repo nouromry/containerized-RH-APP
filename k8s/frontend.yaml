@@ -32,4 +32,4 @@ spec:
   - port: 80
     targetPort: 80
     nodePort: 30080   # optional: fix port; remove to let K8s choose
-  type: NodePort
+  type: ClusterIP

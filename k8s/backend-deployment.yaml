@@ -26,7 +26,13 @@ spec:
             name: backend-config
         - secretRef:
             name: backend-secrets
-        
+        resources:
+          requests:
+            cpu: "100m"    # Requests 10% of a CPU core
+            memory: "128Mi" # Requests 128 Mebibytes of RAM
+          limits:
+            cpu: "500m"    # Can burst up to 50% of a CPU core
+            memory: "256Mi" # Can use a maximum of 256 Mebibytes of RAM
         # --- FIX IS HERE: ADDING HEALTH CHECKS ---
         livenessProbe:
           httpGet:
