@@ -22,9 +22,17 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build the Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest ./ai-model
-          
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest ./ai-model
+        
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Push the Docker image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/hr-aimodel:latest
