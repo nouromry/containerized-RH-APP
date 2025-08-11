@@ -1,0 +1,20 @@
+# k8s/backend-hpa.yml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: hr
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-deployment  # The deployment we want to scale
+  minReplicas: 1             # Always have at least 1 pod
+  maxReplicas: 5             # Scale up to a maximum of 5 pods
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50  # Target 50% CPU utilization

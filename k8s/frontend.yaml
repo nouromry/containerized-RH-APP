@@ -31,5 +31,5 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 30080   # optional: fix port; remove to let K8s choose
+  # The nodePort line has been removed as it is forbidden for ClusterIP services.
   type: ClusterIP
