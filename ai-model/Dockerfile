@@ -6,7 +6,6 @@ FROM python:3.10 AS builder
 WORKDIR /app
 
 # Create a virtual environment to isolate our packages
-# This is the standard best practice for Python applications
 RUN python -m venv /app/venv
 
 # Copy the requirements file
@@ -26,16 +25,15 @@ FROM python:3.10-slim
 # Set the working directory
 WORKDIR /app
 
-# Create a non-root user and group for better security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# --- THIS IS THE CORRECTED LINE ---
+# Create a non-root user and group using Debian-compatible commands
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 # Copy the virtual environment and the source code from the 'builder' stage
-# This brings over Python packages and your code, but nothing else.
 COPY --from=builder /app/venv ./venv
 COPY --from=builder /app ./
 
 # Activate the virtual environment by adding it to the system's PATH
-# This ensures that the 'flask' command can be found
 ENV PATH="/app/venv/bin:$PATH"
 
 # Set environment variables for Flask
